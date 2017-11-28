@@ -1,0 +1,12 @@
+{
+  "name": "dok-ts-db-migrate-module",
+  "version": "1.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/kalyuk/dok-ts-db-migrate-module.git",
+  "author": "Dmitry Kalyuk <dmitry@kalyuk.ru>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "yarn build"
+  }
+}
