@@ -9,6 +9,9 @@ export class MigrateModule extends BaseModule {
     migrationDirName: 'migrations',
     controller: {
       ext: '.js'
+    },
+    migration: {
+      ext: '.js'
     }
   };
   public readonly id = 'MigrateModule';

@@ -19,8 +19,12 @@ export class IndexController extends ConsoleController {
     return path.join(this.module.getMigrationPath(), 'migrations.json');
   }
 
-  constructor(private logService) {
+  constructor(private loggerService) {
     super();
+  }
+
+  init(id, module) {
+    super.init(id, module);
     if (!fs.existsSync(this.module.getMigrationPath())) {
       fs.mkdirSync(this.module.getMigrationPath());
     }
@@ -35,7 +39,7 @@ export class IndexController extends ConsoleController {
   createAction() {
     const name = getApplication().arguments.name || '';
     const time = (new Date()).getTime();
-    const ext = this.module.config.controller.ext;
+    const ext = this.module.config.migration.ext;
     const migrationPath = path.join(this.module.getMigrationPath(), time + '' + name + ext);
 
     fs.writeFileSync(migrationPath, MIGRATION_TEMPLATE);
@@ -44,18 +48,17 @@ export class IndexController extends ConsoleController {
   }
 
   async upAction() {
-    const regexp = new RegExp(`.${this.module.config.controller.ext}`);
+    const regexp = new RegExp(`${this.module.config.migration.ext}$`);
     const migrationsList = JSON.parse(fs.readFileSync(this.getMigrationLockFIlePath(), 'utf8'));
     const files = fs.readdirSync(this.module.getMigrationPath())
       .filter((file) => !!file.match(regexp) && migrationsList.indexOf(`${file}`) === -1);
 
     for (let q = 0; q < files.length; q++) {
       const file = files[q];
-      migrationsList.push(`${file}`);
       const migration = require(path.join(this.module.getMigrationPath(), file));
-      this.logService.render(LOG_LEVEL.INFO, 'Run migrate ' + file);
+      this.loggerService.render(LOG_LEVEL.INFO, 'Run migrate ' + file);
       if (await migration.up()) {
-        this.logService.render(LOG_LEVEL.INFO, 'Migrate is up: ' + file);
+        this.loggerService.render(LOG_LEVEL.INFO, 'Migrate is up: ' + file);
         migrationsList.push(file);
       }
     }
@@ -75,7 +78,8 @@ export class IndexController extends ConsoleController {
     const migration = require(path.join(this.module.getMigrationPath(), name));
 
     if (await migration.down()) {
-      this.logService.render(LOG_LEVEL.INFO, 'Migrate is down: ' + name);
+      this.loggerService.render(LOG_LEVEL.INFO, 'Migrate is down: ' + name);
+      fs.writeFileSync(this.getMigrationLockFIlePath(), JSON.stringify(migrationsList));
     }
 
     return this.render(200, `Migration down completed`, {});
